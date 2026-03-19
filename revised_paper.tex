@@ -1,0 +1,578 @@
+% IEEE Conference Paper - Visualization-Based Comparative Study of Classical Sorting Algorithms
+\documentclass[conference]{IEEEtran}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{microtype}
+\usepackage{url}
+\usepackage[noadjust]{cite}
+\usepackage[hidelinks,colorlinks=false,pdfborder={0 0 0}]{hyperref}
+\usepackage{float}
+
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\begin{document}
+
+\title{Visualization-Based Comparative Study of Classical Sorting Algorithms}
+
+\author{
+\IEEEauthorblockN{Archit Surmal}
+\IEEEauthorblockA{
+Department of Computer Engineering\\
+Pune Institute of Computer Technology\\
+Pune, India\\
+c2k231329@ms.pict.edu}
+\and
+\IEEEauthorblockN{Jayshree Mahajan}
+\IEEEauthorblockA{
+Department of Computer Engineering\\
+Pune Institute of Computer Technology\\
+Pune, India\\
+jsmahajan@pict.edu}
+\and
+\IEEEauthorblockN{Pranali Navghare}
+\IEEEauthorblockA{
+Department of Computer Engineering\\
+Pune Institute of Computer Technology\\
+Pune, India\\
+prnavghare@pict.edu}
+}
+
+\maketitle
+
+% ================== ABSTRACT ==================
+\begin{abstract}
+A recurring gap exists between the theoretical complexity of sorting algorithms
+and how they actually behave at runtime. Standard teaching approaches introduce
+Big-O bounds without showing students how input structure, pivot choice, or
+early termination affects real performance. This paper presents a browser-based
+visualization framework that instruments eight classical sorting
+algorithms---Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, Quick
+Sort, Heap Sort, Radix Sort, and Bucket Sort---tracking every comparison and
+memory write as a typed event. The system separates algorithm execution and visual
+rendering through a shared event queue. Experiments on
+100-element arrays across four input distributions expose behaviors that
+asymptotic notation alone cannot capture: Insertion Sort required only 108
+comparisons on nearly sorted input versus 4,950 on reversed sequences---a
+$45\times$ difference; Quick Sort degraded to $O(n^2)$ behavior on both nearly
+sorted and reversed inputs due to its first-element pivot strategy; Merge Sort
+maintained 319--542 comparisons regardless of distribution; and Radix Sort
+completed with zero comparisons in every case. The tool runs entirely in a web
+browser with no installation required.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Sorting algorithms, algorithm visualization, empirical evaluation,
+event-driven architecture, educational technology, comparative analysis,
+performance instrumentation
+\end{IEEEkeywords}
+
+% ================== I. INTRODUCTION ==================
+\section{Introduction}
+
+Sorting is one of the most studied problems in computer science. It serves as a
+practical testbed for algorithm design ideas like divide-and-conquer, in-place
+computation, and adaptive termination~\cite{cormen2009,knuth1998}. Despite
+extensive theoretical treatment, students regularly struggle with the disconnect
+between asymptotic bounds and actual runtime behavior. Big-O notation describes
+how algorithms scale in the limit, but it hides constant factors, best-case
+adaptations, and sensitivity to input distribution---all of which can dominate
+performance at typical problem sizes~\cite{bentley2000,sedgewick2011}.
+
+Existing visualization tools provide animations that help somewhat, but most
+treat operation counts as secondary, focusing on visual appearance rather than
+quantitative instrumentation~\cite{stasko1998,sorva2012}. Many also mix
+visualization logic with algorithm code, making it harder to extend or analyze
+either part independently~\cite{hundhausen2002,naps2002}.
+
+This paper describes a framework built around three ideas: (1)~\emph{clean
+separation of concerns}, where algorithms communicate only through a typed event
+stream; (2)~\emph{complete instrumentation}, capturing every comparison and
+memory write for offline analysis; and (3)~\emph{animated visualization},
+showing the sorting process with color-coded bars at adjustable speed. Eight algorithms spanning the $O(n^2)$,
+$O(n \log n)$, and $O(nk)$ complexity families are implemented, allowing direct
+cross-family comparison.
+
+% ================== II. RELATED WORK ==================
+\section{Related Work}
+
+Algorithm visualization has roots in the Balsa~\cite{brown1984} and
+Tango~\cite{stasko1990} systems, which established the idea of separating
+algorithm logic from its visual representation. Platforms like
+VisuAlgo~\cite{halim2012} and the AlgoViz Portal~\cite{shaffer2010} cover a
+broad range of algorithms but rarely expose fine-grained operation counts.
+Hundhausen et al.~\cite{hundhausen2002} found that meaningful learning gains
+require active student engagement rather than passive
+watching~\cite{naps2002}.
+
+For sorting in particular, Galles~\cite{galles2011} provides step-by-step
+animations but minimal quantitative output. More recent visualizers by Nath et
+al.~\cite{nath2021} and Patil and Marulkar~\cite{patil2021} serve educational
+purposes but couple visualization tightly with algorithm code. The Sound of
+Sorting~\cite{bingmann2013} adds audio feedback but prioritizes aesthetic
+experience over measurement. Knuth~\cite{knuth1998}, Sedgewick~\cite{sedgewick1975},
+and Bentley and McIlroy~\cite{bentley1993} all showed empirically that
+real-world sorting performance is driven largely by input characteristics beyond
+asymptotic class. No existing browser-based tool combines operation-level
+instrumentation, a modular event-driven architecture, and quantitative-visual
+analysis across multiple input distributions.
+
+% ================== III. SORTING ALGORITHMS ==================
+\section{Sorting Algorithms and Problem Statement}
+
+The framework targets the \emph{sorting problem}: given an array $A$ of $n$
+comparable elements, produce a rearrangement such that $A[1] \leq A[2] \leq
+\cdots \leq A[n]$. Eight algorithms from three complexity families are
+implemented and compared. Table~\ref{tab:complexity} summarizes their
+theoretical properties.
+
+\begin{table}[!t]
+\caption{Theoretical Complexity of Implemented Sorting Algorithms}
+\label{tab:complexity}
+\centering
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+Algorithm    & Best         & Average      & Worst        & Space      \\
+\midrule
+Bubble       & $O(n)$       & $O(n^2)$     & $O(n^2)$     & $O(1)$     \\
+Selection    & $O(n^2)$     & $O(n^2)$     & $O(n^2)$     & $O(1)$     \\
+Insertion    & $O(n)$       & $O(n^2)$     & $O(n^2)$     & $O(1)$     \\
+Merge Sort   & $O(n\log n)$ & $O(n\log n)$ & $O(n\log n)$ & $O(n)$     \\
+Quick Sort   & $O(n\log n)$ & $O(n\log n)$ & $O(n^2)$     & $O(\log n)$\\
+Heap Sort    & $O(n\log n)$ & $O(n\log n)$ & $O(n\log n)$ & $O(1)$     \\
+Radix Sort   & $O(nk)$      & $O(nk)$      & $O(nk)$      & $O(n+k)$   \\
+Bucket Sort  & $O(n+k)$     & $O(n+k)$     & $O(n^2)$     & $O(n+k)$   \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The $O(n^2)$ family---Bubble, Selection, and Insertion Sort---works through
+pairwise comparisons and in-place movement. Bubble Sort repeatedly scans the
+array swapping adjacent elements that are out of order. Selection Sort finds the
+minimum of the remaining unsorted section and moves it into position with one
+swap per pass. Insertion Sort places each new element into its correct position
+within a growing sorted prefix, which gives it $O(n)$ best-case behavior on
+nearly sorted input~\cite{cormen2009}.
+
+The $O(n \log n)$ family uses divide-and-conquer. Merge Sort splits the array
+recursively and merges ordered halves, guaranteeing $O(n \log n)$ in all cases
+at the cost of $O(n)$ auxiliary memory. Quick Sort partitions around a chosen
+pivot; using the first element as pivot produces $O(n^2)$ behavior on sorted or
+nearly sorted input~\cite{hoare1962}. Heap Sort builds a max-heap in $O(n)$
+time and extracts elements one at a time, achieving $O(n \log n)$ consistently
+with $O(1)$ space overhead.
+
+The non-comparison family bypasses the $\Omega(n \log n)$ lower bound. Radix
+Sort processes digits one at a time in $O(nk)$ passes. Bucket Sort distributes
+elements into value-range buckets and sorts each with insertion sort, hitting
+$O(n+k)$ under uniform distributions~\cite{knuth1998}.
+
+% ================== IV. PROPOSED APPROACH ==================
+\section{Proposed Approach}
+
+The core insight behind this framework is that animation and operation counts
+each reveal things the other cannot show. Watching bars move demonstrates how
+data rearranges; counting comparisons and writes shows how much work the
+algorithm actually does. The visualization handles the first; a separate
+benchmark module handles the second.
+
+The central design decision is an \emph{event-driven execution model}. Instead
+of letting sorting algorithms write directly to the DOM or update visual
+elements inline, each algorithm emits a typed event for every fundamental
+operation. A shared event queue sits between event production and consumption.
+The visualization renderer subscribes to this queue for animation; a benchmark
+module separately instruments the same algorithm logic to collect operation
+counts, with no direct coupling between the two.
+
+Three things follow from this design. First, the event log forms a complete,
+replayable execution trace, making the algorithm transparent and debuggable.
+Second, adding a new algorithm requires only conforming to the event interface
+--- rendering and benchmarking code stay untouched. Third, deterministic event
+sequences make cross-algorithm measurement reproducible. Browser-based
+delivery removes installation friction while capping practical array size at
+around 500 elements for smooth animation.
+
+% ================== V. SYSTEM ARCHITECTURE ==================
+\section{System Architecture}
+
+The framework has six loosely coupled components that communicate through the
+event queue, as shown in Fig.~\ref{fig:architecture}.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth,keepaspectratio]{ARCHITECTURE.png}
+\caption{System architecture: events flow from the algorithm engine through
+the event queue to the visualization renderer and analytics module. No
+component holds a direct reference to another.}
+\label{fig:architecture}
+\end{figure}
+
+The \textbf{User Interface Controller} handles algorithm selection, array size
+($n \in [10, 500]$), input distribution, and playback speed, and exposes pause,
+step, and speed controls. The \textbf{Algorithm Engine} implements each sorting
+algorithm as a JavaScript ES6 generator function that yields one typed event per
+operation and pauses until the controller requests the next step. The
+\textbf{Event Queue} maintains a time-ordered buffer of these
+generator-produced events. The \textbf{Playback Controller} dequeues events at
+the user-specified rate, notifies all subscribers, and yields to the browser
+event loop to avoid blocking rendering. The \textbf{Visualization Renderer}
+draws array elements as color-coded vertical bars on an HTML5 canvas: blue for
+unsorted elements, red for elements currently being compared, and green for
+elements in their final position. The \textbf{Analytics Module} records
+comparisons, writes, and reads for each run; these counts are collected via
+a browser console benchmark rather than displayed in the UI during animation.
+Fig.~\ref{fig:ui} shows the complete interface.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth,keepaspectratio]{UI.png}
+\caption{User interface during Radix Sort execution. The left panel shows
+algorithm selection and theoretical complexity. The canvas renders color-coded
+bars that animate the sorting process in real time.}
+\label{fig:ui}
+\end{figure}
+
+Component boundaries are strictly enforced: sorting code has no references to
+rendering or metrics; rendering code contains no sorting logic; analytics code
+is indifferent to both. This independence was confirmed when Radix Sort was
+integrated without touching any previously written component.
+
+% ================== VI. EVENT-DRIVEN EXECUTION MODEL ==================
+\section{Event-Driven Execution Model}
+
+Five primitive event types cover all tracked operations:
+\texttt{compare(i,\,j,\,result)} for element comparisons;
+\texttt{swap(i,\,j)} for exchanges; \texttt{write(i,\,value)} for assignments
+during merge and counting passes; \texttt{read(i)} for non-destructive
+accesses; and \texttt{recursion\_start}/\texttt{end} marking recursive call
+boundaries. Algorithm-specific events extend this set: \texttt{partition} for
+Quick Sort, \texttt{merge} for Merge Sort, and \texttt{distribute} for Bucket
+Sort.
+
+The listing below demonstrates the generator implementation pattern:
+
+\begin{verbatim}
+function* bubbleSort(arr) {
+  const n = arr.length;
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = 0; j < n - i - 1; j++) {
+      yield {type: 'compare', i: j, j: j+1};
+      if (arr[j] > arr[j+1]) {
+        yield { type:'swap', i: j, j: j+1 };
+        [arr[j],arr[j+1]] = [arr[j+1],arr[j]];
+      }
+    }
+  }
+}
+\end{verbatim}
+
+Each \texttt{yield} pauses execution and delivers one event to the queue; the
+controller steps forward by invoking \texttt{generator.next()}, ensuring a
+single operation advances per cycle. All subscribers process events
+synchronously, keeping the displayed animation and reported metrics in
+consistent agreement.
+
+% ================== VII. EXPERIMENTAL RESULTS ==================
+\section{Experimental Setup and Empirical Results}
+
+\subsection{Methodology}
+
+All eight algorithms were benchmarked on arrays of 100 elements across four
+input distributions, with results averaged over ten independent trials. Each
+algorithm's core logic was instrumented directly, counting every comparison and
+memory write without any DOM interaction. The benchmark was run on the deployed
+application using the browser console, with timing measured via the
+\texttt{performance.now()} API.
+
+The four distributions are: \emph{Random} (uniformly distributed values between
+5 and 100); \emph{Nearly Sorted} (a sorted sequence with 10\% random adjacent
+swaps); \emph{Reversed} (strictly descending order, worst case for many
+algorithms); and \emph{Duplicate-Heavy} (values drawn from a fixed set of five
+values, producing approximately 70\% duplicates).
+
+\subsection{Results and Analysis}
+
+Table~\ref{tab:results} reports mean comparison and write counts at $n = 100$.
+At this scale, JavaScript execution times were sub-millisecond across all
+algorithms and are not reported; comparison and write counts are the
+informative metrics here. Fig.~\ref{fig:combo} provides a visual overview.
+
+\begin{table*}[!t]
+\caption{Empirical Performance Metrics for Arrays of Size 100 Across Four
+Input Distributions (Mean of 10 Trials)}
+\label{tab:results}
+\centering
+\small
+\begin{tabular}{lcccccccc}
+\toprule
+\multirow{2}{*}{Algorithm}
+  & \multicolumn{2}{c}{Random}
+  & \multicolumn{2}{c}{Nearly Sorted}
+  & \multicolumn{2}{c}{Reversed}
+  & \multicolumn{2}{c}{Duplicates} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+\cmidrule(lr){6-7} \cmidrule(lr){8-9}
+& Comp & Writes & Comp & Writes & Comp & Writes & Comp & Writes \\
+\midrule
+Bubble     & 4950 & 4638 & 4950 &   18 & 4950 & 9890 & 4950 & 3889 \\
+Selection  & 4950 &  187 & 4950 &   18 & 4950 &  104 & 4950 &  158 \\
+Insertion  & 2571 & 2574 &  108 &  108 & 4950 & 5044 & 2175 & 2177 \\
+Merge      &  542 &  672 &  359 &  672 &  319 &  672 &  523 &  672 \\
+Quick      &  613 &  645 & 4515 &  199 & 4773 & 5010 & 1239 &  441 \\
+Heap       & 1022 & 1154 & 1083 & 1272 &  944 & 1030 &  934 &  974 \\
+Radix      &    0 &  200 &    0 &  200 &    0 &  300 &    0 &  200 \\
+Bucket     &  160 &  100 &   85 &  100 &  215 &  100 &   95 &  100 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\textbf{$O(n^2)$ family.} Bubble Sort and Selection Sort each performed exactly
+$\frac{n(n-1)}{2} = 4{,}950$ comparisons across every distribution, reflecting
+their input-insensitive loop structures. Write counts diverged significantly:
+Bubble Sort produced 9,890 writes on reversed input---every adjacent pair
+requires a swap---but only 18 writes on nearly sorted data. Selection Sort held
+writes near constant across all distributions because it performs at most one
+swap per pass regardless of input order.
+
+Insertion Sort showed the most striking adaptivity of any algorithm tested. On
+nearly sorted input it needed only 108 comparisons, compared to 4,950 on
+reversed data---a $45\times$ reduction. This behavior directly reflects its
+inner \texttt{while} loop, which terminates as soon as it finds an element
+already in the correct position. On random input it averaged 2,571 comparisons,
+sitting roughly halfway between its two extremes.
+
+\textbf{$O(n \log n)$ family.} Merge Sort maintained 319--542 comparisons
+across all four distributions, with write counts fixed at exactly 672 in every
+case. The consistent write count follows directly from the algorithm always
+allocating and filling the same auxiliary array structure regardless of input
+order.
+
+Quick Sort showed the most notable behavior among the divide-and-conquer
+algorithms. On random data it was efficient at 613 comparisons, but it degraded
+sharply on both nearly sorted (4,515 comparisons) and reversed (4,773
+comparisons) input. This is a direct consequence of the first-element pivot
+strategy used in this implementation: when the array is already ordered or
+reverse-ordered, the pivot always lands at one end of the partition, producing
+$O(n^2)$ recursion. This means nearly sorted input triggers degradation just
+as severely as reversed input---a behavior that asymptotic analysis does not
+reveal~\cite{hoare1962}.
+
+Heap Sort was the most stable of the three, ranging from 934 to 1,083
+comparisons with no distribution causing dramatic deviation.
+
+\textbf{Non-comparison family.} Radix Sort performed zero comparisons across
+every distribution, completing each pass with digit-based bucket assignments
+only. Write counts varied slightly---200 writes for two-digit values and 300
+for three-digit values---reflecting the number of digit passes required. Bucket
+Sort required 85--215 comparisons from the insertion sort step within each
+bucket, with reversed input generating the most within-bucket work.
+
+\begin{figure*}[!ht]
+\centering
+\includegraphics[width=0.9\textwidth,height=7cm,keepaspectratio]{GRAPH.png}
+\caption{Comparative performance across eight sorting algorithms: comparisons
+and memory writes at $n = 100$. Bubble Sort and Selection Sort exhibit the
+highest comparison counts (4,950). Radix Sort achieves zero comparisons. The
+$O(n \log n)$ algorithms occupy an intermediate regime.}
+\label{fig:combo}
+\end{figure*}
+
+% ================== VIII. EDUCATIONAL POTENTIAL AND LIMITATIONS ==================
+\section{Educational Potential and Limitations}
+
+The framework was designed with classroom use in mind, though no formal user
+study has been conducted at this stage. The animated visualization addresses
+a gap that lecture-only instruction cannot easily fill: students can watch
+exactly what happens when an algorithm meets a specific input distribution,
+and instructors can discuss operation count differences using the benchmark
+data presented in this paper.
+
+Several design choices support learning specifically. Algorithm selection is
+immediate and requires no setup, making the tool practical for in-class
+demonstrations. The color coding---blue for unsorted, red for active
+comparison, green for finalized---gives students a consistent visual vocabulary
+across all eight algorithms. Adjustable playback speed allows an instructor to
+slow down critical moments like a Quick Sort partition or a Merge Sort merge
+step.
+
+The tool is best used alongside formal instruction rather than as a replacement
+for it. Watching a visualization without a prior conceptual framework tends to
+produce surface-level impressions. Prediction exercises---where students
+estimate operation counts before running an algorithm on a particular
+distribution---are likely to produce more engagement than open-ended
+exploration, based on existing research in algorithm
+visualization~\cite{hundhausen2002,naps2002,stasko2009}.
+
+Current limitations include: the browser canvas restricts smooth animation to
+arrays of roughly 500 elements; JavaScript execution times at this scale are
+sub-millisecond and cannot be meaningfully compared; and the framework does not
+yet support side-by-side dual-algorithm comparison within a single view.
+
+% ================== IX. FUTURE WORK ==================
+\section{Future Work}
+
+Several extensions are planned. Server-side execution in a compiled language
+with event streams transmitted to the browser would enable meaningful timing
+measurement at larger array sizes. The current eight-algorithm set leaves out
+Shell Sort, Counting Sort, and hybrid approaches like Timsort. Enhanced
+visualization modes including memory-access heat maps and simultaneous
+dual-algorithm animation would allow more direct comparison. Accessibility
+improvements including keyboard navigation and screen reader support would
+broaden the tool's usability. A formal user study measuring learning outcomes
+in a controlled classroom setting remains an important future step.
+
+% ================== X. CONCLUSION ==================
+\section{Conclusion}
+
+This paper described a modular, event-driven browser-based framework for
+visualizing and measuring eight classical sorting algorithms. The architecture
+enforces strict separation among algorithm execution, visual rendering, and
+analytics through a shared event queue, allowing each component to evolve
+independently. Benchmark results collected directly from the implemented system
+across four input distributions revealed behaviors that asymptotic notation does
+not capture.
+
+Insertion Sort dropped from 4,950 comparisons on reversed input to just 108 on
+nearly sorted data---a $45\times$ difference. Quick Sort, using a first-element
+pivot, degraded to near-quadratic behavior on both nearly sorted and reversed
+input, showing that the worst-case trigger extends beyond just reversed
+sequences. Merge Sort held its write count at exactly 672 across all
+distributions. Radix Sort required zero comparisons in every case.
+
+These findings come from real instrumented runs of the actual implementation,
+making them a genuine empirical characterization of the specific algorithms as
+built. The event-driven design provides a clear foundation for future work
+including server-side benchmarking, larger-scale testing, and a formal
+educational evaluation.
+
+% ================== REFERENCES ==================
+\begin{thebibliography}{00}
+
+\bibitem{cormen2009}
+T. H. Cormen, C. E. Leiserson, R. L. Rivest, and C. Stein,
+\textit{Introduction to Algorithms}, 3rd ed.
+Cambridge, MA, USA: MIT Press, 2009.
+
+\bibitem{knuth1998}
+D. E. Knuth,
+\textit{The Art of Computer Programming, Volume 3: Sorting and Searching},
+2nd ed. Reading, MA, USA: Addison-Wesley, 1998.
+
+\bibitem{hundhausen2002}
+C. D. Hundhausen, S. A. Douglas, and J. T. Stasko,
+``A meta-study of algorithm visualization effectiveness,''
+\textit{J. Visual Languages and Computing},
+vol. 13, no. 3, pp. 259--290, Jun. 2002.
+
+\bibitem{sedgewick2011}
+R. Sedgewick and K. Wayne,
+\textit{Algorithms}, 4th ed.
+Upper Saddle River, NJ, USA: Addison-Wesley, 2011.
+
+\bibitem{bentley2000}
+J. Bentley,
+\textit{Programming Pearls}, 2nd ed.
+Reading, MA, USA: Addison-Wesley, 2000.
+
+\bibitem{hoare1962}
+C. A. R. Hoare,
+``Quicksort,''
+\textit{Computer J.},
+vol. 5, no. 1, pp. 10--16, Apr. 1962.
+
+\bibitem{stasko1998}
+J. T. Stasko, J. B. Domingue, M. H. Brown, and B. A. Price,
+\textit{Software Visualization: Programming as a Multimedia Experience}.
+Cambridge, MA, USA: MIT Press, 1998.
+
+\bibitem{sorva2012}
+J. Sorva,
+``Visual program simulation in introductory programming education,''
+Ph.D. dissertation, Dept. Comput. Sci., Aalto University,
+Helsinki, Finland, 2012.
+
+\bibitem{naps2002}
+T. L. Naps, G. Rossling, V. Almstrum, W. Dann, R. Fleischer,
+C. Hundhausen, A. Korhonen, L. Malmi, M. McNally, S. Rodger, and
+J. A. Velazquez-Iturbide,
+``Exploring the role of visualization and engagement in computer science
+education,''
+\textit{ACM SIGCSE Bull.},
+vol. 35, no. 2, pp. 131--152, Jun. 2002.
+
+\bibitem{stasko2009}
+J. Stasko and R. Kehoe,
+``Using animations to learn about algorithms: An ethnographic case study,''
+Georgia Institute of Technology, Atlanta, GA, USA,
+Tech. Rep. GIT-GVU-09-20, 2009.
+
+\bibitem{nath2021}
+S. Nath, J. Gupta, A. Gupta, and T. Verma,
+``Sorting algorithm visualizer,''
+\textit{Int. Res. J. Modernization in Eng. Technol. Sci.},
+vol. 3, no. 7, pp. 1--7, Jul. 2021.
+
+\bibitem{patil2021}
+P. Patil and P. S. Marulkar,
+``Sorting visualizer,''
+\textit{Int. J. Res. Publication and Rev.},
+vol. 2, no. 6, pp. 1--6, Jun. 2021.
+
+\bibitem{galles2011}
+D. Galles,
+``Data structure visualizations,''
+University of San Francisco, San Francisco, CA, USA, 2011. [Online].
+Available: https://www.cs.usfca.edu/\~{}galles/visualization/
+
+\bibitem{brown1984}
+M. H. Brown and R. Sedgewick,
+``A system for algorithm animation,''
+\textit{ACM SIGGRAPH Comput. Graph.},
+vol. 18, no. 3, pp. 177--186, Jul. 1984.
+
+\bibitem{stasko1990}
+J. T. Stasko,
+``Tango: A framework and system for algorithm animation,''
+\textit{IEEE Computer},
+vol. 23, no. 9, pp. 27--39, Sep. 1990.
+
+\bibitem{shaffer2010}
+C. A. Shaffer, M. L. Cooper, A. J. D. Alon, M. Akbar, M. Stewart,
+S. Ponce, and S. H. Edwards,
+``The algorithm visualization portal,''
+in \textit{Proc. 41st ACM Tech. Symp. Comput. Sci. Educ.},
+Milwaukee, WI, USA, Mar. 2010, pp. 440--444.
+
+\bibitem{halim2012}
+S. Halim,
+``VisuAlgo: Visualising data structures and algorithms through animation,''
+National University of Singapore, Singapore, 2012. [Online].
+Available: https://visualgo.net/
+
+\bibitem{bingmann2013}
+T. Bingmann,
+``Sound of sorting -- Audibilization and visualization of sorting
+algorithms,''
+Karlsruhe Institute of Technology, Karlsruhe, Germany, 2013. [Online].
+Available: https://panthema.net/2013/sound-of-sorting/
+
+\bibitem{sedgewick1975}
+R. Sedgewick,
+``Quicksort,''
+Ph.D. dissertation, Dept. Comput. Sci., Stanford University,
+Stanford, CA, USA, 1975.
+
+\bibitem{bentley1993}
+J. L. Bentley and M. D. McIlroy,
+``Engineering a sort function,''
+\textit{Softw. Pract. Exper.},
+vol. 23, no. 11, pp. 1249--1265, Nov. 1993.
+
+\end{thebibliography}
+
+\end{document}
