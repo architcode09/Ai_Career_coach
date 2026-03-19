@@ -1,32 +1,32 @@
 export const faqs = [
   {
-    question: "What makes Sensai unique as a career development tool?",
+    question: "What sets Sensai apart from other career tools?",
     answer:
-      "Sensai combines AI-powered career tools with industry-specific insights to help you advance your career. Our platform offers three main features: an intelligent resume builder, a cover letter generator, and an adaptive interview preparation system. Each tool is tailored to your industry and skills, providing personalized guidance for your professional journey.",
+      "Sensai offers a comprehensive suite of AI-driven tools designed specifically for career advancement. We combine smart resume creation, customized cover letter writing, and adaptive interview coaching—all tailored to your industry and personal strengths—to provide a truly personalized career growth experience.",
   },
   {
-    question: "How does Sensai create tailored content?",
+    question: "How does Sensai tailor content to my needs?",
     answer:
-      "Sensai learns about your industry, experience, and skills during onboarding. It then uses this information to generate customized resumes, cover letters, and interview questions. The content is specifically aligned with your professional background and industry standards, making it highly relevant and effective.",
+      "During setup, Sensai gathers key details about your job experience, skills, and industry preferences. Using this information, our AI generates customized resumes, cover letters, and interview questions that reflect your unique background and align with industry expectations for better job opportunities.",
   },
   {
-    question: "How accurate and up-to-date are Sensai's industry insights?",
+    question: "How reliable are Sensai’s industry insights?",
     answer:
-      "We update our industry insights weekly using advanced AI analysis of current market trends. This includes salary data, in-demand skills, and industry growth patterns. Our system constantly evolves to ensure you have the most relevant information for your career decisions.",
+      "Our insights are backed by continuous data analysis and updated weekly. We use advanced AI tools to track trends such as salary ranges, emerging skills, and hiring patterns, ensuring that you’re always working with the most current and relevant information available.",
   },
   {
-    question: "Is my data secure with Sensai?",
+    question: "Is my personal data safe when using Sensai?",
     answer:
-      "Absolutely. We prioritize the security of your professional information. All data is encrypted and securely stored using industry-standard practices. We use Clerk for authentication and never share your personal information with third parties.",
+      "We take data security seriously. All personal information is encrypted and stored following the highest industry standards. Authentication is handled securely via Clerk, and we never share your data with external parties without your consent.",
   },
   {
-    question: "How can I track my interview preparation progress?",
+    question: "Can I monitor my progress while preparing for interviews?",
     answer:
-      "Sensai tracks your performance across multiple practice interviews, providing detailed analytics and improvement suggestions. You can view your progress over time, identify areas for improvement, and receive AI-generated tips to enhance your interview skills based on your responses.",
+      "Yes! Sensai keeps track of your practice sessions and performance metrics. You’ll get detailed feedback, improvement tips, and a progress overview that helps you track your strengths and focus on areas needing enhancement as you prepare for real interviews.",
   },
   {
-    question: "Can I edit the AI-generated content?",
+    question: "Can I make changes to the AI-generated content?",
     answer:
-      "Yes! While Sensai generates high-quality initial content, you have full control to edit and customize all generated resumes, cover letters, and other content. Our markdown editor makes it easy to refine the content to perfectly match your needs.",
+      "Absolutely! Sensai provides you with editable templates so you can fine-tune your resumes, cover letters, and other documents. Our user-friendly markdown editor makes it simple to customize the content until it perfectly represents your voice and professional goals.",
   },
 ];

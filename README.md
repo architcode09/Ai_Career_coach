@@ -1,20 +1,52 @@
-# Full Stack AI Career Coach with Next JS, Neon DB, Tailwind, Prisma, Inngest, Shadcn UI Tutorial 🔥🔥
-## https://youtu.be/UbXpRv5ApKA
+# AI Career Coach (React + Vite + MERN Backend)
 
-![sensai](https://github.com/user-attachments/assets/eee79242-4056-4d19-b655-2873788979e1)
+This repository contains:
+- Frontend: React + Vite (`/` root)
+- Backend: Express + MongoDB (`/server`)
 
-### Make sure to create a `.env` file with following variables -
+## 1) Install dependencies
 
+Frontend:
+```bash
+npm install
 ```
-DATABASE_URL=
 
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/onboarding
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding
-
-GEMINI_API_KEY=
+Backend:
+```bash
+cd server
+npm install
 ```
+
+## 2) Environment files
+
+Backend env is in:
+- `server/.env`
+
+Frontend env values are in:
+- `.env` (root)
+- `src/.env` (added as requested)
+
+## 3) Run in development
+
+Start backend (port 5000):
+```bash
+cd server
+npm run dev
+```
+
+Start frontend (port 5173):
+```bash
+npm run dev
+```
+
+## 4) Build frontend
+
+```bash
+npm run build
+npm run preview
+```
+
+## API Base URL
+
+Frontend uses:
+- `VITE_API_URL=http://localhost:5000/api`

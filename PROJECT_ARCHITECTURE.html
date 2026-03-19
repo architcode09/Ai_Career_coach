@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>AI Career Coach Study Architecture</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      :root{--bg:#071316;--panel:#0d2024;--panel2:#10282d;--line:rgba(157,187,183,.15);--text:#eef7f5;--muted:#99afac;--accent:#2dd4bf;--accent2:#f59e0b;--shadow:0 24px 50px rgba(0,0,0,.25);scroll-behavior:smooth}
+      *{box-sizing:border-box}html,body{margin:0;padding:0;min-height:100%}body{font-family:"Space Grotesk",sans-serif;color:var(--text);background:radial-gradient(circle at top left,rgba(45,212,191,.12),transparent 26%),radial-gradient(circle at top right,rgba(245,158,11,.09),transparent 22%),linear-gradient(180deg,#071316,#09181c 50%,#061115)}
+      a{color:inherit;text-decoration:none}code,.mono{font-family:"IBM Plex Mono",monospace}
+      .topbar{position:sticky;top:0;z-index:20;background:rgba(7,19,22,.82);backdrop-filter:blur(16px);border-bottom:1px solid rgba(157,187,183,.12)}
+      .topbar-inner,.shell{width:min(1400px,calc(100% - 32px));margin:0 auto}
+      .topbar-inner{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);gap:18px;align-items:center;padding:18px 0 14px}
+      .kicker,.tag,.method,.access,.count{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;font-weight:700}
+      .kicker{background:rgba(45,212,191,.12);border:1px solid rgba(45,212,191,.24);color:#cffff8}
+      .brand h1{margin:12px 0 6px;font-size:clamp(1.9rem,4vw,2.7rem);line-height:.98;letter-spacing:-.04em}.brand p{margin:0;color:var(--muted);line-height:1.65;max-width:760px}
+      .toolbar{display:grid;gap:12px}.search-shell,.tool-actions,.nav-links{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+      .search-shell{background:rgba(11,29,33,.82);border:1px solid rgba(157,187,183,.14);padding:12px 14px;border-radius:18px}.search-shell input{flex:1;min-width:120px;border:0;outline:0;background:transparent;color:var(--text);font:inherit}.search-count{color:var(--muted);font-size:.82rem}
+      .btn,.nav-links a{display:inline-flex;align-items:center;justify-content:center;padding:9px 13px;border-radius:999px;border:1px solid rgba(157,187,183,.15);background:rgba(11,29,33,.72);color:var(--muted);font:inherit;font-size:.86rem;cursor:pointer}
+      .btn:hover,.nav-links a:hover{color:var(--text);border-color:rgba(45,212,191,.28)}
+      .shell{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:24px;padding:28px 0 56px}main{min-width:0}
+      .hero,.card,.section-card,.sidebar-card,.route-card,.qa-card,.step{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
+      .hero{padding:28px;margin-bottom:18px}.hero-grid,.stats,.grid-2,.grid-3,.route-list,.qa-list,.steps{display:grid;gap:16px}.hero-grid{grid-template-columns:minmax(0,1.15fr) minmax(260px,.85fr)}.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:20px}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .hero h2{margin:16px 0 10px;font-size:clamp(2.2rem,5vw,4rem);line-height:.94;letter-spacing:-.055em}.hero p{margin:0;color:#d7e8e4;line-height:1.75}.callout{padding:18px;border-radius:20px;background:rgba(45,212,191,.08);border-left:4px solid var(--accent)}.callout strong{display:block;margin-bottom:8px}
+      .metric,.card,.route-card,.step{padding:18px}.metric strong{display:block;font-size:2rem;letter-spacing:-.05em}.metric span,.helper{color:var(--muted)}
+      .section-card{margin-bottom:18px;overflow:hidden}.section-card>summary,.qa-card>summary{list-style:none;cursor:pointer}.section-card>summary{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:22px 24px}.section-card>summary::-webkit-details-marker,.qa-card>summary::-webkit-details-marker{display:none}
+      .section-title{display:flex;gap:14px;align-items:center}.index,.qa-index{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:rgba(45,212,191,.12);color:#d1fff8;font-weight:700;flex:0 0 auto}.section-title h3,.card h3,.card h4,.sidebar-card h3{margin:0 0 8px;letter-spacing:-.02em}.section-title p,.sidebar-card p,.card p,.card li,.route-card p,.qa-answer p,.step p{color:#d7e6e3;line-height:1.7}.section-title p{margin:0;color:var(--muted)}.chevron{color:var(--muted);transition:transform .2s ease}.section-card[open] .chevron,.qa-card[open] .chevron{transform:rotate(90deg)}
+      .section-body{padding:0 24px 24px}.path{display:inline-flex;padding:6px 10px;border-radius:12px;background:rgba(7,20,24,.82);border:1px solid rgba(157,187,183,.14);font-size:.83rem;color:#dcfbff}
+      .step{display:grid;grid-template-columns:56px minmax(0,1fr);gap:14px}.step-no{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:rgba(45,212,191,.14);color:#d1fff8;font-weight:700}
+      .sidebar{position:sticky;top:110px;align-self:start;display:grid;gap:16px}.sidebar-card{padding:18px}.progress-bar{height:10px;border-radius:999px;overflow:hidden;background:rgba(157,187,183,.14);margin:14px 0 10px}.progress-fill{width:0;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .25s ease}.progress-list{display:grid;gap:10px;margin-top:14px}.progress-item{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;align-items:start}.progress-item input{margin-top:4px}.progress-item a{color:#dbe8e6;font-size:.93rem}
+      .tag{background:rgba(12,31,35,.8);border:1px solid rgba(157,187,183,.15);color:#dbf4ef}.method.get{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.22);color:#a7f3d0}.method.post{background:rgba(59,130,246,.14);border:1px solid rgba(59,130,246,.24);color:#bfdbfe}.method.put{background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.22);color:#fde68a}.method.patch{background:rgba(34,211,238,.14);border:1px solid rgba(34,211,238,.22);color:#cffafe}.method.delete{background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.24);color:#fecaca}.access.public{background:rgba(148,163,184,.14);border:1px solid rgba(148,163,184,.2);color:#e2e8f0}.access.protected{background:rgba(45,212,191,.12);border:1px solid rgba(45,212,191,.2);color:#d1fae5}.count{background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.2);color:#fff3cf}
+      .route-head,.route-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.route-head{justify-content:space-between;margin-bottom:14px}.route-list{grid-template-columns:repeat(2,minmax(0,1fr))}.route-card p{margin:12px 0 0}
+      .qa-card{overflow:hidden}.qa-card>summary{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:16px 18px}.qa-question{display:flex;gap:12px;align-items:center}.qa-answer{padding:0 18px 18px}
+      .hidden-by-search{display:none!important}
+      @media (max-width:1180px){.shell{grid-template-columns:1fr}.sidebar{position:static;order:-1}.hero-grid,.stats,.grid-2,.grid-3,.route-list{grid-template-columns:1fr 1fr}}
+      @media (max-width:920px){.topbar-inner{grid-template-columns:1fr}.hero-grid,.stats,.grid-2,.grid-3,.route-list{grid-template-columns:1fr}.nav-links{overflow-x:auto;flex-wrap:nowrap;padding-bottom:6px}}
+      @media (max-width:640px){.topbar-inner,.shell{width:min(100%,calc(100% - 22px))}.hero,.section-card>summary,.section-body,.sidebar-card{padding-left:16px;padding-right:16px}.step{grid-template-columns:1fr}}
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <span class="kicker">Study Architecture + Interview Revision</span>
+          <h1>AI Career Coach Study Guide</h1>
+          <p>Rebuilt from the live codebase on March 16, 2026 so the project is easier to study, easier to revise, and more accurate than the old architecture file.</p>
+        </div>
+        <div class="toolbar">
+          <label class="search-shell" for="searchInput">
+            <span class="mono">search</span>
+            <input id="searchInput" type="text" placeholder="Find auth, goals, Gemini, models, routes..." aria-label="Search study guide" />
+            <span id="searchCount" class="search-count">0 matches</span>
+          </label>
+          <div class="tool-actions">
+            <button id="expandAll" class="btn" type="button">Expand all</button>
+            <button id="collapseAll" class="btn" type="button">Collapse all</button>
+          </div>
+          <nav class="nav-links">
+            <a href="#roadmap">Roadmap</a>
+            <a href="#overview">Flow</a>
+            <a href="#frontend">Frontend</a>
+            <a href="#backend">Backend</a>
+            <a href="#auth">Auth</a>
+            <a href="#models">Models</a>
+            <a href="#api">API</a>
+            <a href="#ai">AI</a>
+            <a href="#revision">Revision</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <div class="shell">
+      <main>
+        <section class="hero">
+          <div class="hero-grid">
+            <div>
+              <span class="kicker">Faster To Read, Easier To Explain</span>
+              <h2>Study this project from the outside in.</h2>
+              <p>Start with the app flow, then the frontend service layer, then the Express route path, then the Mongoose models, and finally the Gemini integration. That order makes the whole project much easier to understand.</p>
+            </div>
+            <div class="callout">
+              <strong>Important correction</strong>
+              The app does not keep the access token in <span class="mono">localStorage</span>. The access token lives in memory inside <span class="mono">src/services/api.js</span>, while the refresh token lives in an <span class="mono">httpOnly</span> cookie.
+            </div>
+          </div>
+          <div class="stats">
+            <div class="metric"><strong>36</strong><span>Live API routes</span></div>
+            <div class="metric"><strong>4</strong><span>Mongoose models</span></div>
+            <div class="metric"><strong>5</strong><span>Gemini helpers</span></div>
+            <div class="metric"><strong>9</strong><span>Main study sections</span></div>
+          </div>
+        </section>
+
+        <section id="roadmap" class="card">
+          <h3>Study Roadmap (Full Flow + Deep Dive)</h3>
+          <p style="margin-bottom:16px;">Use this exact order for the fastest comprehension of app behavior end-to-end, with code paths and data flow for each feature area.</p>
+          <div class="steps">
+            <div class="step" data-study-item data-search="roadmap app authcontext api.js"><div class="step-no">1</div><div><h4>1. Start at entry and auth context</h4><p>Open <span class="path">src/main.jsx</span> and <span class="path">src/App.jsx</span> to see route layout. Then <span class="path">src/context/AuthContext.jsx</span> for user state, token refresh behavior, and protected route handling.</p></div></div>
+            <div class="step" data-study-item data-search="api.js axios interceptor refresh"><div class="step-no">2</div><div><h4>2. Understand the API client</h4><p><span class="path">src/services/api.js</span> has the Axios instance, auth header injection, 401 refresh flow, and global error mapping. This is the gateway to every backend call.</p></div></div>
+            <div class="step" data-study-item data-search="career-service goal-service assessment-service"><div class="step-no">3</div><div><h4>3. Map frontend feature services</h4><p><span class="path">src/services/career-service.js</span>, <span class="path">src/services/goal-service.js</span>, <span class="path">src/services/assessment-service.js</span>, and <span class="path">src/services/ai-service.js</span> contain the business logic for UI actions. Learn request types, payload formats, and how AI is wired.</p></div></div>
+            <div class="step" data-study-item data-search="routes controllers express authMiddleware"><div class="step-no">4</div><div><h4>4. Follow backend request pipeline</h4><p>Open <span class="path">server/server.js</span>, then each route file in <span class="path">server/routes/</span>, and controller files in <span class="path">server/controllers/</span>. Note middleware order, auth checks, and error handling.</p></div></div>
+            <div class="step" data-study-item data-search="models user careerprofile goal assessment"><div class="step-no">5</div><div><h4>5. Learn database modeling</h4><p>Read <span class="path">server/models/User.js</span>, <span class="path">server/models/CareerProfile.js</span>, <span class="path">server/models/Goal.js</span>, <span class="path">server/models/Assessment.js</span>. Write down relationships: user->career profile, user->goals, user->assessments.</p></div></div>
+            <div class="step" data-study-item data-search="gemini ai-service ai features resume cover letter"><div class="step-no">6</div><div><h4>6. Inspect AI features and data lifecycle</h4><p>In <span class="path">src/services/ai-service.js</span> review prompt templates and response parsing; then track where results go via career-service endpoints and model updates.</p></div></div>
+            <div class="step" data-study-item data-search="run guide env health"><div class="step-no">7</div><div><h4>7. Run and validate with smoke tests</h4><p>Run the backend and frontend, test: sign-up/login, edit profile, add goals, run quiz, create cover letter. Validate with <span class="mono">/api/health</span> and UI data persistence.</p></div></div>
+          </div>
+        </section>
+
+        <details class="section-card" id="overview" open>
+          <summary>
+            <div class="section-title"><div class="index">1</div><div><h3>Big Picture Flow</h3><p>Learn the full app in one screen.</p></div></div>
+            <div class="chevron">&gt;</div>
+          </summary>
+          <div class="section-body">
+            <div class="grid-3">
+              <div class="card" data-study-item data-search="react pages features ui"><h4>React UI</h4><p>Pages and feature components collect input and show results.</p></div>
+              <div class="card" data-study-item data-search="services api axios"><h4>Service Layer</h4><p>Frontend services decide which endpoint to call and how data should be shaped.</p></div>
+              <div class="card" data-study-item data-search="express middleware controller"><h4>Express Backend</h4><p>Middleware protects the request, route files map the endpoint, and controllers run business logic.</p></div>
+            </div>
+            <div class="grid-3" style="margin-top:16px;">
+              <div class="card" data-study-item data-search="mongoose models"><h4>Mongoose Models</h4><p>User, CareerProfile, Goal, and Assessment define validation, hooks, and storage shape.</p></div>
+              <div class="card" data-study-item data-search="mongodb atlas"><h4>MongoDB</h4><p>Stores user data, career data, goal data, assessment data, and saved AI artifacts.</p></div>
+              <div class="card" data-study-item data-search="gemini ai save"><h4>Gemini</h4><p>AI runs in the frontend, then its output is saved through normal REST APIs.</p></div>
+            </div>
+            <div class="callout" style="margin-top:16px;"><strong>Most interviewable flow sentence</strong>User action -> frontend service -> <span class="mono">api.js</span> -> Express route/controller -> Mongoose model -> MongoDB -> JSON response -> UI update.</div>
+          </div>
+        </details>
+
+        <details class="section-card" id="frontend" open>
+          <summary>
+            <div class="section-title"><div class="index">2</div><div><h3>Frontend Architecture</h3><p>Pages + auth context + service layer.</p></div></div>
+            <div class="chevron">&gt;</div>
+          </summary>
+          <div class="section-body">
+            <div class="grid-2">
+              <div class="card" data-study-item data-search="app jsx requireauth routes sign-in sign-up dashboard"><h4>Routing</h4><p><span class="path">src/App.jsx</span> uses a local <span class="mono">RequireAuth</span>. Public routes are <span class="mono">/</span>, <span class="mono">/sign-in</span>, and <span class="mono">/sign-up</span>. Dashboard, onboarding, resume, cover-letter, and interview pages are protected.</p></div>
+              <div class="card" data-study-item data-search="authcontext useauth isLoading user"><h4>Auth State</h4><p><span class="path">src/context/AuthContext.jsx</span> restores the user on app start and exposes <span class="mono">signIn</span>, <span class="mono">signUp</span>, and <span class="mono">signOut</span>.</p></div>
+              <div class="card" data-study-item data-search="api.js refreshPromise interceptor bearer"><h4>Shared Axios Client</h4><p><span class="mono">src/services/api.js</span> adds the Bearer token, handles 401 refresh, and uses <span class="mono">refreshPromise</span> to avoid duplicate refresh requests.</p></div>
+              <div class="card" data-study-item data-search="career-service onboarding resume cover letter quiz insights"><h4>Career Service Is The Center</h4><p><span class="mono">career-service.js</span> handles onboarding, resume save, cover letters, insights, quiz saving, auth events, and AI fallbacks.</p></div>
+            </div>
+          </div>
+        </details>
+
+        <details class="section-card" id="backend" open>
+          <summary>
+            <div class="section-title"><div class="index">3</div><div><h3>Backend Architecture</h3><p>Middleware, route files, controllers, and models.</p></div></div>
+            <div class="chevron">&gt;</div>
+          </summary>
+          <div class="section-body">
+            <div class="grid-2">
+              <div class="card" data-study-item data-search="server.js helmet cors cookie-parser morgan health"><h4>Server Bootstrap</h4><p><span class="path">server/server.js</span> loads env values, enables security and parsing middleware, exposes <span class="mono">/api/health</span>, mounts the route groups, and starts only after MongoDB connects.</p></div>
+              <div class="card" data-study-item data-search="cors localhost ports"><h4>Useful Real-World Detail</h4><p>In development, the backend accepts localhost origins on different ports, so Vite fallback ports still work without extra CORS changes.</p></div>
+              <div class="card" data-study-item data-search="rate limiter auth"><h4>Security Middleware</h4><p>Only auth routes get a rate limiter: 20 requests per 15 minutes per IP.</p></div>
+              <div class="card" data-study-item data-search="error handler validation cast error"><h4>Error Handling</h4><p>The global error handler turns common Mongoose errors into cleaner JSON responses.</p></div>
+            </div>
+            <div class="callout" style="margin-top:16px;"><strong>Request lifecycle</strong>Service function -> axios request -> Express middleware -> route file -> controller -> Mongoose model -> JSON response -> optional refresh retry on 401.</div>
+          </div>
+        </details>
+
+        <details class="section-card" id="auth" open>
+          <summary>
+            <div class="section-title"><div class="index">4</div><div><h3>JWT Auth Flow</h3><p>The highest-value interview section.</p></div></div>
+            <div class="chevron">&gt;</div>
+          </summary>
+          <div class="section-body">
+            <div class="grid-3">
+              <div class="card" data-study-item data-search="register create user careerprofile"><h4>Register</h4><p><span class="mono">POST /api/auth/register</span> creates the user, creates an empty CareerProfile, returns the access token, and sets the refresh cookie.</p></div>
+              <div class="card" data-study-item data-search="login comparePassword lastLogin"><h4>Login</h4><p>Checks the password with <span class="mono">comparePassword()</span>, updates <span class="mono">lastLogin</span>, and issues new tokens.</p></div>
+              <div class="card" data-study-item data-search="refresh cookie refresh secret"><h4>Refresh</h4><p><span class="mono">/api/auth/refresh</span> verifies the cookie token and checks it matches the token stored on the user record.</p></div>
+            </div>
+            <div class="grid-3" style="margin-top:16px;">
+              <div class="card" data-study-item data-search="15m 7d tokens"><h4>Token Lifetimes</h4><p>Access token: <span class="mono">15m</span>. Refresh token: <span class="mono">7d</span>.</p></div>
+              <div class="card" data-study-item data-search="authMiddleware isActive unauthorized"><h4>authMiddleware</h4><p>Checks the Bearer token, verifies JWT, loads the user, and rejects inactive or missing accounts.</p></div>
+              <div class="card" data-study-item data-search="cookie better than localstorage"><h4>Security Answer</h4><p>Long-lived refresh tokens are safer in <span class="mono">httpOnly</span> cookies than in browser storage accessible to scripts.</p></div>
+            </div>
+            <div class="callout" style="margin-top:16px;"><strong>JWT internals</strong>
+              <ul style="margin:10px 0 0 16px;line-height:1.5">
+                <li><code>JWT payload</code> contains <code>userId</code>, <code>email</code>, and <code>issuedAt</code>.</li>
+                <li><code>JWT secret</code> is loaded from <code>process.env.JWT_SECRET</code> and used in sign/verify.</li>
+                <li>Refresh flow uses <code>refreshToken</code> in cookie; verified with same secret and matched to user value from DB, preventing reuse after logout.</li>
+                <li>When refreshing, the backend rotates the refresh token token every time, then updates the user record with new refresh data.</li>
+              </ul>
+            </div>
+            <div class="callout" style="margin-top:16px;"><strong>DB auth fields</strong>
+              <ul style="margin:10px 0 0 16px;line-height:1.5">
+                <li><code>User</code> persists <code>passwordHash</code>, <code>refreshToken</code>, <code>lastLogin</code> and <code>isActive</code> status.</li>
+                <li>Logout clears refresh token server-side and removes cookie to invalidate session immediately.</li>
+                <li>Revocation supports a stale refresh token check; users from soft-deleted accounts are blocked at user load.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <details class="section-card" id="models" open>
+          <summary>
+            <div class="section-title"><div class="index">5</div><div><h3>Data Models</h3><p>Remember the relationship map first, hooks second.</p></div></div>
+            <div class="chevron">&gt;</div>
+          </summary>
+          <div class="section-body">
+            <div class="callout"><strong>Simple relationship sentence</strong>One <span class="mono">User</span> owns one <span class="mono">CareerProfile</span> and can own many <span class="mono">Goal</span> and <span class="mono">Assessment</span> documents.</div>
+            <div class="grid-2" style="margin-top:16px;">
+              <div class="card" data-study-item data-search="user model comparePassword password hash"><h4>User</h4><p>Identity, auth, refresh token, and lightweight profile data. Password hashing happens in a pre-save hook.</p></div>
+              <div class="card" data-study-item data-search="careerprofile completionScore resumeContent coverLetters industryInsights"><h4>CareerProfile</h4><p>The richest model. Stores deep career data, embedded experience and education, resume content, cover letters, and insights.</p></div>
+              <div class="card" data-study-item data-search="goal progress milestones completedAt"><h4>Goal</h4><p>Tracks planning, progress, milestones, category, priority, and completion timestamps.</p></div>
+              <div class="card" data-study-item data-search="assessment questions aiAnalysis completedAt"><h4>Assessment</h4><p>Stores review quiz results, AI analysis, strengths, and improvement plans.</p></div>
+            </div>
+            <div class="callout" style="margin-top:16px;"><strong>Database design details</strong>
+              <ul style="margin:10px 0 0 16px;line-height:1.5">
+                <li><code>User</code> has unique index on <code>email</code> and fields: <code>password</code> (hashed), <code>refreshToken</code>, <code>lastLogin</code>, <code>isActive</code>.</li>
+                <li><code>CareerProfile</code> uses nested arrays for experience/education and computed <code>completionScore</code> plus text-heavy fields for AI recommendations.</li>
+                <li><code>Goal</code> supports query by user, status, dueDate; updates run via controller patch for safe increments.</li>
+                <li><code>Assessment</code> stores question responses, score metrics, and AI analysis subobject for “strengths”/“improvements”.</li>
+                <li>Soft delete pattern in user account deletion: remove credentials + clear related CV/goals/assessments references with cascading remove in controller.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <details class="section-card" id="api" open>
+          <summary>
+            <div class="section-title"><div class="index">6</div><div><h3>API Surface</h3><p>Compact route study map from the live files.</p></div></div>
+            <div class="chevron">&gt;</div>
+          </summary>
+          <div class="section-body"><div id="apiGroups"></div></div>
+        </details>
+
+        <details class="section-card" id="ai" open>
+          <summary>
+            <div class="section-title"><div class="index">7</div><div><h3>Gemini Integration</h3><p>Where AI lives and how it gets saved.</p></div></div>
+            <div class="chevron">&gt;</div>
+          </summary>
+          <div class="section-body">
+            <div class="grid-3">
+              <div class="card" data-study-item data-search="ai-service gemini-2.5-flash"><h4>Where Gemini Runs</h4><p>All AI calls start in <span class="path">src/services/ai-service.js</span> and default to <span class="mono">gemini-2.5-flash</span>.</p></div>
+              <div class="card" data-study-item data-search="cleanJsonText parse json"><h4>JSON Cleanup</h4><p>The service removes markdown code fences before parsing AI JSON for insights and quiz questions.</p></div>
+              <div class="card" data-study-item data-search="fallbacks"><h4>Fallbacks</h4><p>If Gemini fails, the frontend can still provide fallback insights, quiz questions, and other default content.</p></div>
+            </div>
+            <div class="callout" style="margin-top:16px;"><strong>Production tradeoff</strong>This frontend-only AI pattern is great for learning but not ideal for production. A real production version should proxy AI calls through the backend to protect API keys and centralize control.</div>
+          </div>
+        </details>
+
+        <details class="section-card" id="revision" open>
+          <summary>
+            <div class="section-title"><div class="index">8</div><div><h3>Revision + Interview Drill</h3><p>Quick facts, run guide, and answer practice.</p></div></div>
+            <div class="chevron">&gt;</div>
+          </summary>
+          <div class="section-body">
+            <div class="grid-3">
+              <div class="card" data-study-item data-search="run guide npm install dev"><h4>Run Guide</h4><p>Root: <span class="mono">npm install</span>. Backend: <span class="mono">cd server && npm install && npm run dev</span>. Frontend: <span class="mono">npm run dev</span>.</p></div>
+              <div class="card" data-study-item data-search="env files"><h4>Env Files</h4><p>Backend uses <span class="mono">server/.env</span>. Frontend values live in the root <span class="mono">.env</span> and also <span class="mono">src/.env</span> in this repo setup.</p></div>
+              <div class="card" data-study-item data-search="health check 5000 5173"><h4>Smoke Test</h4><p>Backend health route: <span class="mono">http://localhost:5000/api/health</span>. Frontend usually runs at <span class="mono">http://localhost:5173</span>.</p></div>
+            </div>
+            <div id="qaList" class="qa-list" style="margin-top:16px;"></div>
+          </div>
+        </details>
+      </main>
+
+      <aside class="sidebar">
+        <div class="sidebar-card">
+          <h3>Progress Tracker</h3>
+          <p>Check off sections as you study. Progress is saved in your browser.</p>
+          <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+          <div id="progressText" class="helper">0 of 9 sections complete</div>
+          <div id="progressList" class="progress-list"></div>
+        </div>
+        <div class="sidebar-card">
+          <h3>Best 30-second answer</h3>
+          <p>"This project uses a React + Vite frontend, an Express + MongoDB backend, JWT auth with refresh cookies, a frontend service layer, and Gemini for AI features that are later saved through normal REST APIs."</p>
+        </div>
+      </aside>
+    </div>
+
+    <script>
+      const checklistItems = [
+        { id: "roadmap", label: "Study roadmap" },
+        { id: "overview", label: "Big picture flow" },
+        { id: "frontend", label: "Frontend architecture" },
+        { id: "backend", label: "Backend architecture" },
+        { id: "auth", label: "JWT auth flow" },
+        { id: "models", label: "Data models" },
+        { id: "api", label: "API surface" },
+        { id: "ai", label: "Gemini integration" },
+        { id: "revision", label: "Revision drill" }
+      ];
+
+      const routeGroups = [
+        { title: "Auth", count: 5, hint: "Public session setup and session restore", routes: [["POST","/api/auth/register","Public","Create user, create CareerProfile, issue tokens."],["POST","/api/auth/login","Public","Validate credentials and issue tokens."],["POST","/api/auth/logout","Public","Clear stored refresh token and cookie."],["POST","/api/auth/refresh","Public","Issue a new access token from the cookie."],["GET","/api/auth/me","Protected","Return the current authenticated user."]] },
+        { title: "User", count: 3, hint: "Lightweight identity and onboarding profile", routes: [["GET","/api/user/profile","Protected","Load the lightweight user profile."],["PUT","/api/user/profile","Protected","Update root user fields and nested profile fields."],["DELETE","/api/user/account","Protected","Delete the user and related records."]] },
+        { title: "Career", count: 16, hint: "Deep profile, education, experience, resume, letters, insights", routes: [["GET","/api/career/profile","Protected","Load or auto-create CareerProfile."],["PUT","/api/career/profile","Protected","Update deep career fields."],["POST","/api/career/experience","Protected","Add experience."],["PUT","/api/career/experience/:id","Protected","Update experience."],["DELETE","/api/career/experience/:id","Protected","Delete experience."],["POST","/api/career/education","Protected","Add education."],["PUT","/api/career/education/:id","Protected","Update education."],["DELETE","/api/career/education/:id","Protected","Delete education."],["GET","/api/career/resume","Protected","Load resume content."],["PUT","/api/career/resume","Protected","Save resume content."],["GET","/api/career/cover-letters","Protected","List saved cover letters."],["POST","/api/career/cover-letters","Protected","Create a cover letter."],["GET","/api/career/cover-letters/:id","Protected","Load one cover letter."],["DELETE","/api/career/cover-letters/:id","Protected","Delete one cover letter."],["GET","/api/career/insights","Protected","Load cached industry insights."],["PUT","/api/career/insights","Protected","Save AI-generated insights."]] },
+        { title: "Goals", count: 6, hint: "Career planning and progress tracking", routes: [["GET","/api/goals","Protected","List goals."],["POST","/api/goals","Protected","Create a goal."],["GET","/api/goals/:id","Protected","Load one goal."],["PUT","/api/goals/:id","Protected","Update a goal."],["DELETE","/api/goals/:id","Protected","Delete a goal."],["PATCH","/api/goals/:id/progress","Protected","Update progress and status."]] },
+        { title: "Assessments", count: 6, hint: "Quiz history and interview-readiness results", routes: [["GET","/api/assessments","Protected","List assessments."],["POST","/api/assessments","Protected","Create an assessment."],["GET","/api/assessments/:id","Protected","Load one assessment."],["PUT","/api/assessments/:id","Protected","Update one assessment."],["DELETE","/api/assessments/:id","Protected","Delete one assessment."],["POST","/api/assessments/:id/complete","Protected","Mark an assessment completed."]] }
+      ];
+
+      const qaItems = [
+        { q: "How would you explain the architecture in one answer?", a: "It is a React + Vite frontend talking to a separate Express + MongoDB backend through a frontend service layer and a shared axios client." },
+        { q: "Why is the service layer important here?", a: "It keeps components focused on UI while API logic, retries, auth refresh, and AI orchestration stay in dedicated files." },
+        { q: "How does auth work in this project?", a: "Register and login return an access token, set a refresh cookie, and protected requests use the access token with refresh on 401." },
+        { q: "Why is the refresh token in a cookie?", a: "Because an httpOnly cookie reduces direct access from client-side JavaScript compared with browser storage." },
+        { q: "What is special about api.js?", a: "It centralizes the base URL, Authorization header behavior, and the refresh retry flow using refreshPromise." },
+        { q: "How is data split across models?", a: "User stores auth and lightweight profile data, CareerProfile stores deep career data, Goal stores planning data, and Assessment stores quiz result data." },
+        { q: "How does Gemini fit in?", a: "Gemini is called from the frontend, and then the frontend saves the generated result using normal backend endpoints." },
+        { q: "What is the main production weakness?", a: "The AI key usage is frontend-side, which is fine for learning but should move behind the backend in production." }
+      ];
+
+      const progressKey = "ai-career-coach-architecture-progress-v3";
+      const methodClass = (method) => method.toLowerCase();
+
+      function renderProgress() {
+        const stored = JSON.parse(localStorage.getItem(progressKey) || "{}");
+        const list = document.getElementById("progressList");
+        list.innerHTML = checklistItems.map((item) => `<label class="progress-item"><input type="checkbox" data-id="${item.id}" ${stored[item.id] ? "checked" : ""} /><a href="#${item.id}">${item.label}</a></label>`).join("");
+        list.querySelectorAll("input[data-id]").forEach((input) => {
+          input.addEventListener("change", () => {
+            const next = JSON.parse(localStorage.getItem(progressKey) || "{}");
+            next[input.dataset.id] = input.checked;
+            localStorage.setItem(progressKey, JSON.stringify(next));
+            updateProgress();
+          });
+        });
+        updateProgress();
+      }
+
+      function updateProgress() {
+        const stored = JSON.parse(localStorage.getItem(progressKey) || "{}");
+        const done = checklistItems.filter((item) => stored[item.id]).length;
+        const total = checklistItems.length;
+        document.getElementById("progressFill").style.width = `${Math.round((done / total) * 100)}%`;
+        document.getElementById("progressText").textContent = `${done} of ${total} sections complete`;
+      }
+
+      function renderRoutes() {
+        const container = document.getElementById("apiGroups");
+        container.innerHTML = routeGroups.map((group) => `
+          <section class="card">
+            <div class="route-head">
+              <div><h4>${group.title}</h4><div class="helper">${group.hint}</div></div>
+              <span class="count">${group.count} routes</span>
+            </div>
+            <div class="route-list">
+              ${group.routes.map(([method, path, access, purpose]) => `
+                <article class="route-card" data-study-item data-search="${group.title} ${method} ${path} ${access} ${purpose}">
+                  <div class="route-meta">
+                    <span class="method ${methodClass(method)}">${method}</span>
+                    <span class="path">${path}</span>
+                    <span class="access ${access.toLowerCase()}">${access}</span>
+                  </div>
+                  <p>${purpose}</p>
+                </article>
+              `).join("")}
+            </div>
+          </section>
+        `).join("");
+      }
+
+      function renderQa() {
+        const list = document.getElementById("qaList");
+        list.innerHTML = qaItems.map((item, index) => `
+          <details class="qa-card" data-study-item data-search="${item.q} ${item.a}">
+            <summary>
+              <div class="qa-question"><div class="qa-index">${index + 1}</div><div>${item.q}</div></div>
+              <div class="chevron">&gt;</div>
+            </summary>
+            <div class="qa-answer"><p><strong>Answer:</strong> ${item.a}</p></div>
+          </details>
+        `).join("");
+      }
+
+      function runSearch() {
+        const query = document.getElementById("searchInput").value.trim().toLowerCase();
+        const items = [...document.querySelectorAll("[data-study-item]")];
+        let matches = 0;
+        if (query) document.querySelectorAll("details.section-card").forEach((section) => { section.open = true; });
+        items.forEach((item) => {
+          const haystack = (item.dataset.search || item.textContent || "").toLowerCase();
+          const match = !query || haystack.includes(query);
+          item.classList.toggle("hidden-by-search", !match);
+          if (match && query) matches += 1;
+        });
+        document.getElementById("searchCount").textContent = query ? `${matches} matches` : "0 matches";
+      }
+
+      document.getElementById("expandAll").addEventListener("click", () => {
+        document.querySelectorAll("details.section-card, details.qa-card").forEach((item) => { item.open = true; });
+      });
+
+      document.getElementById("collapseAll").addEventListener("click", () => {
+        document.querySelectorAll("details.section-card, details.qa-card").forEach((item) => { item.open = false; });
+      });
+
+      document.getElementById("searchInput").addEventListener("input", runSearch);
+
+      renderProgress();
+      renderRoutes();
+      renderQa();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SENSAI – AI Career Coach Architecture & Flow Diagram</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f0f1a;
+    color: #e2e8f0;
+    padding: 24px;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  h1 { font-size: 28px; font-weight: 800; text-align: center; color: #a78bfa; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: #94a3b8; margin-bottom: 30px; font-size: 13px; }
+
+  .flow-title {
+    font-size: 16px; font-weight: 700; color: #6ee7b7; margin: 20px 0 12px;
+    border-bottom: 1px solid #1e293b; padding-bottom: 6px;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    margin-bottom: 6px;
+  }
+
+  .box {
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 100px;
+    max-width: 150px;
+    line-height: 1.4;
+    flex-shrink: 0;
+  }
+
+  .box-user     { background: #1e3a5f; border: 2px solid #3b82f6; color: #93c5fd; }
+  .box-clerk    { background: #2e1a47; border: 2px solid #8b5cf6; color: #c4b5fd; }
+  .box-mw       { background: #1a2e1e; border: 2px solid #22c55e; color: #86efac; }
+  .box-check    { background: #1a2e20; border: 2px solid #16a34a; color: #6ee7b7; }
+  .box-page     { background: #1c2336; border: 2px solid #60a5fa; color: #bfdbfe; }
+  .box-action   { background: #2a1c1c; border: 2px solid #f97316; color: #fdba74; }
+  .box-gemini   { background: #231a38; border: 2px solid #a855f7; color: #d8b4fe; }
+  .box-prisma   { background: #1a2634; border: 2px solid #38bdf8; color: #7dd3fc; }
+  .box-db       { background: #1a2634; border: 2px solid #0ea5e9; color: #38bdf8; }
+  .box-inngest  { background: #2a1a2e; border: 2px solid #ec4899; color: #f9a8d4; }
+  .box-cron     { background: #1c1a2e; border: 2px solid #818cf8; color: #a5b4fc; }
+
+  .arrow { color: #475569; font-size: 18px; padding: 0 4px; flex-shrink: 0; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  .feature-card { border-radius: 10px; padding: 12px; border: 1px solid #1e293b; background: #111827; }
+  .feature-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .feature-card ul { list-style: none; }
+  .feature-card li { font-size: 11px; color: #94a3b8; margin-bottom: 3px; padding-left: 12px; position: relative; }
+  .feature-card li::before { content: "▸"; position: absolute; left: 0; color: #6ee7b7; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 16px; }
+  th { background: #1e293b; color: #94a3b8; padding: 6px 10px; text-align: left; font-weight: 600; }
+  td { padding: 6px 10px; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+  code { background: #1e293b; padding: 2px 5px; border-radius: 4px; color: #a78bfa; font-size: 10px; }
+
+  .schema-wrap { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .schema-model { border-radius: 8px; border: 1px solid #1e293b; background: #111827; min-width: 160px; flex: 1; }
+  .schema-header { background: #1e293b; padding: 6px 10px; font-size: 12px; font-weight: 700; color: #6ee7b7; border-radius: 8px 8px 0 0; }
+  .schema-field { padding: 3px 10px; font-size: 10px; color: #94a3b8; border-bottom: 1px solid #0f172a; }
+  .schema-field .field-name { color: #e2e8f0; font-weight: 600; }
+  .schema-field .field-type { color: #60a5fa; }
+
+  @media print {
+    body { background: #fff; color: #111; padding: 12px; }
+    .box-user  { background: #dbeafe; border-color: #3b82f6; color: #1e3a5f; }
+    .box-clerk { background: #ede9fe; border-color: #8b5cf6; color: #4c1d95; }
+    .box-mw    { background: #dcfce7; border-color: #22c55e; color: #14532d; }
+    .box-check { background: #d1fae5; border-color: #16a34a; color: #064e3b; }
+    .box-page  { background: #dbeafe; border-color: #60a5fa; color: #1e3a5f; }
+    .box-action{ background: #ffedd5; border-color: #f97316; color: #7c2d12; }
+    .box-gemini{ background: #f3e8ff; border-color: #a855f7; color: #4a044e; }
+    .box-prisma{ background: #e0f2fe; border-color: #38bdf8; color: #0c4a6e; }
+    .box-db    { background: #e0f2fe; border-color: #0ea5e9; color: #0c4a6e; }
+    .box-inngest{ background: #fce7f3; border-color: #ec4899; color: #831843; }
+    .box-cron  { background: #e0e7ff; border-color: #818cf8; color: #312e81; }
+    .feature-card { background: #f8fafc; border-color: #e2e8f0; }
+    .schema-model { background: #f8fafc; border-color: #e2e8f0; }
+    .schema-header { background: #e2e8f0; color: #065f46; }
+    h1 { color: #4c1d95; }
+    .flow-title { color: #065f46; }
+    table th { background: #f1f5f9; }
+    code { background: #f1f5f9; color: #6d28d9; }
+    .arrow { color: #94a3b8; }
+  }
+</style>
+</head>
+<body>
+
+<h1>SENSAI – AI Career Coach</h1>
+<p class="subtitle">Architecture & Full Flow Diagram | Next.js 15 · Clerk · Prisma · PostgreSQL · Gemini AI · Inngest</p>
+
+<div class="flow-title">1. Request Flow – Every Page Load</div>
+<div class="flow-row">
+  <div class="box box-user">User Browser</div>
+  <div class="arrow">→</div>
+  <div class="box box-mw">middleware.js<br/><span style="font-weight:400;font-size:10px">Clerk auth check</span></div>
+  <div class="arrow">→</div>
+  <div class="box box-clerk">Clerk Session<br/><span style="font-weight:400;font-size:10px">userId?</span></div>
+  <div class="arrow">→</div>
+  <div class="box box-check">checkUser()<br/><span style="font-weight:400;font-size:10px">Sync to DB</span></div>
+  <div class="arrow">→</div>
+  <div class="box box-page">Page Component<br/><span style="font-weight:400;font-size:10px">Server Component</span></div>
+</div>
+<div class="flow-row" style="margin-top:4px;">
+  <div style="font-size:11px;color:#94a3b8;">Not logged in + protected route → <strong style="color:#f87171">Redirect to /sign-in</strong></div>
+</div>
+
+<div class="flow-title">2. Authentication & User Sync Flow</div>
+<div class="flow-row">
+  <div class="box box-user">New User<br/>visits app</div>
+  <div class="arrow">→</div>
+  <div class="box box-clerk">Clerk<br/>Sign Up/In</div>
+  <div class="arrow">→</div>
+  <div class="box box-check">checkUser()<br/><span style="font-size:10px;font-weight:400">currentUser()</span></div>
+  <div class="arrow">→</div>
+  <div class="box box-prisma">Prisma:<br/>findUnique</div>
+  <div class="arrow">→</div>
+  <div class="box box-db">PostgreSQL<br/>User table</div>
+</div>
+<div class="flow-row" style="margin-top:4px;">
+  <div class="box box-check" style="min-width:130px;">Not in DB?<br/>db.user.create()</div>
+  <div class="arrow">→</div>
+  <div class="box box-page">/onboarding<br/><span style="font-size:10px;font-weight:400">Select industry, skills</span></div>
+  <div class="arrow">→</div>
+  <div class="box box-action">updateUser()<br/>server action</div>
+  <div class="arrow">→</div>
+  <div class="box box-gemini">Gemini AI<br/>Generate Insights</div>
+  <div class="arrow">→</div>
+  <div class="box box-db">Save<br/>IndustryInsight</div>
+</div>
+
+<div class="flow-title">3. Server Action Pattern (All Features Use This)</div>
+<div class="flow-row">
+  <div class="box box-page">React Component</div>
+  <div class="arrow">→</div>
+  <div class="box box-action">Server Action<br/><span style="font-size:10px;font-weight:400">actions/*.js</span></div>
+  <div class="arrow">→</div>
+  <div class="box box-clerk">auth()<br/><span style="font-size:10px;font-weight:400">Get userId</span></div>
+  <div class="arrow">→</div>
+  <div class="box box-prisma">db.user<br/>.findUnique()</div>
+  <div class="arrow">→</div>
+  <div class="box box-gemini">Gemini<br/>API Call</div>
+  <div class="arrow">→</div>
+  <div class="box box-db">DB Write<br/>(Prisma)</div>
+  <div class="arrow">→</div>
+  <div class="box box-page">Return Data<br/>to Component</div>
+</div>
+
+<div class="flow-title">4. Feature-by-Feature Flow</div>
+<div class="grid-2">
+  <div class="feature-card">
+    <h3 style="color:#60a5fa">Dashboard Flow</h3>
+    <ul>
+      <li>User visits /dashboard</li>
+      <li>getIndustryInsights() called</li>
+      <li>Check DB for IndustryInsight record</li>
+      <li>If missing → Gemini prompt → create record</li>
+      <li>Show salary chart (Recharts), demand level, key trends</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3 style="color:#f97316">Interview Quiz Flow</h3>
+    <ul>
+      <li>User visits /interview → click "Start Quiz"</li>
+      <li>generateQuiz() → Gemini → 10 MCQs JSON</li>
+      <li>User answers all 10 questions</li>
+      <li>saveQuizResult() → calc score</li>
+      <li>Wrong answers → Gemini improvement tip</li>
+      <li>Save Assessment to DB, show history chart</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3 style="color:#a78bfa">Cover Letter Flow</h3>
+    <ul>
+      <li>User visits /ai-cover-letter → fills form</li>
+      <li>jobTitle, companyName, jobDescription input</li>
+      <li>generateCoverLetter() → Gemini → Markdown letter</li>
+      <li>Saved to CoverLetter table in DB</li>
+      <li>View list of all cover letters</li>
+      <li>Delete or export as PDF (html2pdf.js)</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3 style="color:#6ee7b7">Resume Builder Flow</h3>
+    <ul>
+      <li>User visits /resume</li>
+      <li>getResume() → load existing markdown content</li>
+      <li>Edit in markdown editor (@uiw/react-md-editor)</li>
+      <li>Click "AI Improve" → improveWithAI() → Gemini rewrites section</li>
+      <li>saveResume() → upsert in DB (one per user)</li>
+      <li>Export → html2pdf.js generates PDF</li>
+    </ul>
+  </div>
+</div>
+
+<div class="flow-title">5. Background Job Flow (Inngest Cron – Every Sunday)</div>
+<div class="flow-row">
+  <div class="box box-cron">Every Sunday<br/>midnight<br/><span style="font-size:10px;font-weight:400">cron: 0 0 * * 0</span></div>
+  <div class="arrow">→</div>
+  <div class="box box-inngest">Inngest<br/>Job Trigger</div>
+  <div class="arrow">→</div>
+  <div class="box box-prisma">Fetch all<br/>industries from DB</div>
+  <div class="arrow">→</div>
+  <div class="box box-gemini">For each industry<br/>→ Gemini AI prompt</div>
+  <div class="arrow">→</div>
+  <div class="box box-db">Update<br/>IndustryInsight in DB</div>
+</div>
+<div style="text-align:center; font-size:11px; color:#94a3b8; margin-top:6px;">
+  Inngest webhook endpoint: <code>POST /api/inngest</code> (Next.js API route)
+</div>
+
+<div class="flow-title">6. Database Schema (Prisma Models)</div>
+<div class="schema-wrap">
+  <div class="schema-model">
+    <div class="schema-header">User</div>
+    <div class="schema-field"><span class="field-name">id</span> <span class="field-type">String @uuid</span></div>
+    <div class="schema-field"><span class="field-name">clerkUserId</span> <span class="field-type">String @unique</span></div>
+    <div class="schema-field"><span class="field-name">email</span> <span class="field-type">String @unique</span></div>
+    <div class="schema-field"><span class="field-name">industry</span> <span class="field-type">String?</span></div>
+    <div class="schema-field"><span class="field-name">experience</span> <span class="field-type">Int?</span></div>
+    <div class="schema-field"><span class="field-name">skills</span> <span class="field-type">String[]</span></div>
+    <div class="schema-field"><span class="field-name">→ assessments</span> <span class="field-type">Assessment[]</span></div>
+    <div class="schema-field"><span class="field-name">→ coverLetter</span> <span class="field-type">CoverLetter[]</span></div>
+    <div class="schema-field"><span class="field-name">→ resume</span> <span class="field-type">Resume?</span></div>
+  </div>
+  <div class="schema-model">
+    <div class="schema-header">Assessment</div>
+    <div class="schema-field"><span class="field-name">userId</span> <span class="field-type">String</span></div>
+    <div class="schema-field"><span class="field-name">category</span> <span class="field-type">String</span></div>
+    <div class="schema-field"><span class="field-name">quizScore</span> <span class="field-type">Float</span></div>
+    <div class="schema-field"><span class="field-name">questions</span> <span class="field-type">Json[]</span></div>
+    <div class="schema-field"><span class="field-name">improvementTip</span> <span class="field-type">String?</span></div>
+  </div>
+  <div class="schema-model">
+    <div class="schema-header">Resume</div>
+    <div class="schema-field"><span class="field-name">userId</span> <span class="field-type">String @unique</span></div>
+    <div class="schema-field"><span class="field-name">content</span> <span class="field-type">String (Markdown)</span></div>
+    <div class="schema-field"><span class="field-name">atsScore</span> <span class="field-type">Float?</span></div>
+    <div class="schema-field"><span class="field-name">feedback</span> <span class="field-type">String?</span></div>
+  </div>
+  <div class="schema-model">
+    <div class="schema-header">CoverLetter</div>
+    <div class="schema-field"><span class="field-name">userId</span> <span class="field-type">String</span></div>
+    <div class="schema-field"><span class="field-name">content</span> <span class="field-type">String (Markdown)</span></div>
+    <div class="schema-field"><span class="field-name">companyName</span> <span class="field-type">String</span></div>
+    <div class="schema-field"><span class="field-name">jobTitle</span> <span class="field-type">String</span></div>
+    <div class="schema-field"><span class="field-name">status</span> <span class="field-type">draft | completed</span></div>
+  </div>
+  <div class="schema-model">
+    <div class="schema-header">IndustryInsight</div>
+    <div class="schema-field"><span class="field-name">industry</span> <span class="field-type">String @unique</span></div>
+    <div class="schema-field"><span class="field-name">salaryRanges</span> <span class="field-type">Json[]</span></div>
+    <div class="schema-field"><span class="field-name">growthRate</span> <span class="field-type">Float (%)</span></div>
+    <div class="schema-field"><span class="field-name">demandLevel</span> <span class="field-type">HIGH|MEDIUM|LOW</span></div>
+    <div class="schema-field"><span class="field-name">topSkills</span> <span class="field-type">String[]</span></div>
+    <div class="schema-field"><span class="field-name">nextUpdate</span> <span class="field-type">DateTime</span></div>
+  </div>
+</div>
+
+<div class="flow-title">7. Tech Stack Summary</div>
+<table>
+  <tr><th>Layer</th><th>Technology</th><th>Files</th><th>Purpose</th></tr>
+  <tr><td>Framework</td><td>Next.js 15 (App Router)</td><td><code>app/</code></td><td>SSR, routing, Server Actions, API routes</td></tr>
+  <tr><td>Auth</td><td>Clerk</td><td><code>middleware.js</code>, all action files</td><td>Sign-up/in, session, user identity</td></tr>
+  <tr><td>DB ORM</td><td>Prisma 6</td><td><code>lib/prisma.js</code>, <code>schema.prisma</code></td><td>Type-safe PostgreSQL queries</td></tr>
+  <tr><td>Database</td><td>PostgreSQL</td><td><code>DATABASE_URL</code> env var</td><td>Persistent storage</td></tr>
+  <tr><td>AI</td><td>Google Gemini 1.5 Flash</td><td>All <code>actions/*.js</code>, inngest function</td><td>Quiz gen, resume improve, cover letters, insights</td></tr>
+  <tr><td>Background Jobs</td><td>Inngest</td><td><code>lib/inngest/</code>, <code>app/api/inngest/</code></td><td>Weekly cron to refresh industry data</td></tr>
+  <tr><td>UI Components</td><td>Radix UI (shadcn/ui)</td><td><code>components/ui/</code></td><td>Accessible dialogs, tabs, select, accordion</td></tr>
+  <tr><td>Styling</td><td>Tailwind CSS</td><td>All JSX files</td><td>Utility-first CSS styling</td></tr>
+  <tr><td>Charts</td><td>Recharts</td><td>dashboard pages</td><td>Salary bar chart, quiz score line chart</td></tr>
+  <tr><td>PDF Export</td><td>html2pdf.js</td><td>resume, cover letter pages</td><td>Download resume/cover letter as PDF</td></tr>
+  <tr><td>Forms</td><td>React Hook Form + Zod</td><td>onboarding, cover letter form</td><td>Form state management + validation schemas</td></tr>
+</table>
+
+<div class="flow-title">8. Key Design Patterns for Placement Interviews</div>
+<div class="grid-3">
+  <div class="feature-card">
+    <h3 style="color:#f9a8d4">Server Actions</h3>
+    <ul>
+      <li>No separate REST API layer needed</li>
+      <li>"use server" directive marks server function</li>
+      <li>Called directly from React components</li>
+      <li>Runs entirely on server = secure</li>
+      <li>No CORS issues, no fetch() needed</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3 style="color:#7dd3fc">Route Groups</h3>
+    <ul>
+      <li>(auth) → centered login layout</li>
+      <li>(main) → protected + header layout</li>
+      <li>Parentheses DON'T affect URL path</li>
+      <li>Each group has own layout.jsx</li>
+      <li>Enables layout nesting in Next.js</li>
+    </ul>
+  </div>
+  <div class="feature-card">
+    <h3 style="color:#86efac">Prisma Patterns</h3>
+    <ul>
+      <li>Singleton client in lib/prisma.js</li>
+      <li>Upsert for resume (one per user)</li>
+      <li>Transaction in updateUser()</li>
+      <li>Relations: User → Assessment, Resume, CoverLetter, IndustryInsight</li>
+    </ul>
+  </div>
+</div>
+
+<div style="text-align:center; margin-top:20px; padding:12px; background:#1e293b; border-radius:8px; font-size:12px; color:#94a3b8;">
+  💡 To save as PDF: Open this file in Chrome → Press <strong style="color:#e2e8f0">Ctrl+P</strong> → Choose "Save as PDF" → Set margins to None → Print
+</div>
+
+</body>
+</html>
+
