@@ -3,17 +3,19 @@ import { BarLoader } from "react-spinners";
 import { industries } from "@/data/industries";
 import OnboardingForm from "@/src/features/onboarding/onboarding-form";
 import { getUserOnboardingStatus } from "@/src/services/career-service";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
+  const isEditMode = searchParams.get("edit") === "true";
 
   useEffect(() => {
     const run = async () => {
       try {
         const { isOnboarded } = await getUserOnboardingStatus();
-        if (isOnboarded) {
+        if (isOnboarded && !isEditMode) {
           navigate("/dashboard", { replace: true });
           return;
         }
@@ -23,7 +25,7 @@ export default function OnboardingPage() {
     };
 
     run();
-  }, [navigate]);
+  }, [isEditMode, navigate]);
 
   if (loading) {
     return <BarLoader className="mt-4" width="100%" color="gray" />;
@@ -31,7 +33,7 @@ export default function OnboardingPage() {
 
   return (
     <main>
-      <OnboardingForm industries={industries} />
+      <OnboardingForm industries={industries} isEditing={isEditMode} />
     </main>
   );
 }

@@ -28,7 +28,7 @@ import useFetch from "@/src/hooks/use-fetch";
 import { onboardingSchema } from "@/src/lib/schema";
 import { updateUser } from "@/src/services/career-service";
 
-export default function OnboardingForm({ industries }) {
+export default function OnboardingForm({ industries, isEditing = false }) {
   const navigate = useNavigate();
   const [selectedIndustry, setSelectedIndustry] = useState(null);
 
@@ -61,10 +61,10 @@ export default function OnboardingForm({ industries }) {
 
   useEffect(() => {
     if (updateResult?.success && !updateLoading) {
-      toast.success("Profile completed successfully");
+      toast.success(isEditing ? "Profile updated successfully" : "Profile completed successfully");
       navigate("/dashboard", { replace: true });
     }
-  }, [navigate, updateLoading, updateResult]);
+  }, [isEditing, navigate, updateLoading, updateResult]);
 
   const watchIndustry = watch("industry");
 
@@ -72,10 +72,13 @@ export default function OnboardingForm({ industries }) {
     <div className="flex items-center justify-center bg-background">
       <Card className="mx-2 mt-10 w-full max-w-lg">
         <CardHeader>
-          <CardTitle className="gradient-title text-4xl">Complete Your Profile</CardTitle>
+          <CardTitle className="gradient-title text-4xl">
+            {isEditing ? "Edit Your Profile" : "Complete Your Profile"}
+          </CardTitle>
           <CardDescription>
-            Select your industry to get personalized career insights and
-            recommendations.
+            {isEditing
+              ? "Update your profile details to refresh recommendations and insights."
+              : "Select your industry to get personalized career insights and recommendations."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -182,7 +185,7 @@ export default function OnboardingForm({ industries }) {
                   Saving...
                 </>
               ) : (
-                "Complete Profile"
+                isEditing ? "Update Profile" : "Complete Profile"
               )}
             </Button>
           </form>

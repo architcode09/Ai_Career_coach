@@ -106,7 +106,7 @@ export default function Header() {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/onboarding" className="flex items-center gap-2">
+                    <Link to="/onboarding?edit=true" className="flex items-center gap-2">
                       <User className="h-4 w-4" />
                       Edit Profile
                     </Link>
